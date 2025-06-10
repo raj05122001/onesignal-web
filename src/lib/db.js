@@ -1,24 +1,34 @@
 // lib/db.js
-//
-// Prisma client singleton for Next.js (handles hot-reload in dev)
-// ---------------------------------------------------------------
+// Prisma client configuration with connection pooling and error handling
 
 import { PrismaClient } from '@prisma/client';
 
-let prisma;
+const globalForPrisma = globalThis;
 
-/**
- * In production we create a new PrismaClient once.
- * In development we attach it to `globalThis` to preserve
- * the connection across hot-reloads.
- */
-if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient();
-} else {
-  if (!globalThis._prisma) {
-    globalThis._prisma = new PrismaClient();
-  }
-  prisma = globalThis._prisma;
+const prisma = globalForPrisma.prisma || new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  errorFormat: 'pretty',
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
 }
 
 export default prisma;
+
+// Test database connection
+export async function testConnection() {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    console.log('✅ Database connection successful');
+    return true;
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    return false;
+  }
+}
+
+// Graceful shutdown
+export async function disconnect() {
+  await prisma.$disconnect();
+}

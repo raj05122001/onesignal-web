@@ -1,5 +1,5 @@
-// prisma/schema.prisma
-// PostgreSQL database
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -7,67 +7,62 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgres://user:pass@localhost:5432/notif"
+  url      = "postgresql://subscriptionuser:0000@localhost:5432/userdb"
 }
 
-/* ───────────────────
-   ENUMS
-─────────────────── */
-enum Role {
-  ADMIN
-  SENDER
-}
-
-/* ───────────────────
-   MODELS
-─────────────────── */
+// User model for authentication
 model User {
-  id          String            @id @default(uuid())
-  email       String            @unique
-  password    String            // hashed
-  role        Role
-  notificationsSent NotificationLog[] @relation("UserNotifications")
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  @@map("users")
 }
 
+// Subscriber model for OneSignal users
 model Subscriber {
-  id          String   @id @default(uuid())
-  playerId    String   @unique        // OneSignal player ID
-  mobile      String?                 // stored PII
-  groups      Group[]  @relation("GroupSubscribers")
+  id        String   @id @default(cuid())
+  playerId  String   @unique
+  mobile    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt   DateTime @default(now())
+  groups Group[] @relation("SubscriberGroups")
+
+  @@map("subscribers")
 }
 
+// Group model for organizing subscribers
 model Group {
-  id            String            @id @default(uuid())
-  name          String            @unique
-  description   String?
-  subscribers   Subscriber[]      @relation("GroupSubscribers")
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subscribers Subscriber[] @relation("SubscriberGroups")
   notifications NotificationLog[] @relation("GroupNotifications")
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  @@map("groups")
 }
 
+// Notification log for tracking sent notifications
 model NotificationLog {
-  id          String   @id @default(uuid())
+  id          String   @id @default(cuid())
   title       String
   message     String
-  url         String?              // click-through link
-  imageUrl    String?              // rich media
+  url         String?
+  imageUrl    String?
+  status      String   @default("PENDING")
   scheduledAt DateTime?
   sentAt      DateTime?
-  delivered   Int       @default(0)
-  failed      Int       @default(0)
-  status      String?              // e.g. SCHEDULED | SENT | FAILED
-
-  // relations
-  createdBy   User?    @relation("UserNotifications", fields: [createdById], references: [id])
-  createdById String?
-  groups      Group[]  @relation("GroupNotifications")
-
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  groups Group[] @relation("GroupNotifications")
+
+  @@map("notification_logs")
 }
