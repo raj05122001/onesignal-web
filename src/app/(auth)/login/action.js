@@ -18,7 +18,7 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { SignJWT } from 'jose';
 
-const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+const SECRET = new TextEncoder().encode(process.env.NEXT_PUBLIC_NEXTAUTH_SECRET);
 
 /* ------------------------------------------------------------------
    Helper → sign JWT (7-day expiry)
