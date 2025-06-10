@@ -3,8 +3,8 @@
 // Thin wrapper around OneSignal REST API v1 • Uses native fetch (Node 18+)
 // ---------------------------------------------------------------
 
-const APP_ID       = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
-const REST_API_KEY = process.env.NEXT_PUBLIC_ONESIGNAL_REST_API_KEY;
+const APP_ID       = process.env.ONESIGNAL_APP_ID;
+const REST_API_KEY = process.env.ONESIGNAL_REST_API_KEY;
 const BASE_URL     = "https://api.onesignal.com";
 
 if (!APP_ID || !REST_API_KEY) {

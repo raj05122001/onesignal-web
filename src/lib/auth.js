@@ -22,6 +22,7 @@ const prisma = new PrismaClient();
    NextAuth configuration (exported below)
 ───────────────────────────────────────── */
 export const authOptions = {
+  debug: process.env.NODE_ENV === 'development', // Add this line
   adapter: PrismaAdapter(prisma),
 
   session: {
@@ -42,7 +43,7 @@ export const authOptions = {
 
         // 1) Find user by email
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email.toLowerCase().trim() },
         });
         if (!user) throw new Error('User not found');
 
@@ -83,7 +84,7 @@ export const authOptions = {
     },
   },
 
-  secret: process.env.NEXT_PUBLIC_NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 /* ─────────────────────────────────────────
