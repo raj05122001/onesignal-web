@@ -1,0 +1,73 @@
+// prisma/schema.prisma
+// PostgreSQL database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgres://user:pass@localhost:5432/notif"
+}
+
+/* ───────────────────
+   ENUMS
+─────────────────── */
+enum Role {
+  ADMIN
+  SENDER
+}
+
+/* ───────────────────
+   MODELS
+─────────────────── */
+model User {
+  id          String            @id @default(uuid())
+  email       String            @unique
+  password    String            // hashed
+  role        Role
+  notificationsSent NotificationLog[] @relation("UserNotifications")
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model Subscriber {
+  id          String   @id @default(uuid())
+  playerId    String   @unique        // OneSignal player ID
+  mobile      String?                 // stored PII
+  groups      Group[]  @relation("GroupSubscribers")
+
+  createdAt   DateTime @default(now())
+}
+
+model Group {
+  id            String            @id @default(uuid())
+  name          String            @unique
+  description   String?
+  subscribers   Subscriber[]      @relation("GroupSubscribers")
+  notifications NotificationLog[] @relation("GroupNotifications")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model NotificationLog {
+  id          String   @id @default(uuid())
+  title       String
+  message     String
+  url         String?              // click-through link
+  imageUrl    String?              // rich media
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  delivered   Int       @default(0)
+  failed      Int       @default(0)
+  status      String?              // e.g. SCHEDULED | SENT | FAILED
+
+  // relations
+  createdBy   User?    @relation("UserNotifications", fields: [createdById], references: [id])
+  createdById String?
+  groups      Group[]  @relation("GroupNotifications")
+
+  createdAt   DateTime @default(now())
+}
