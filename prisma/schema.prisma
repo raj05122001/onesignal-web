@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,7 +7,6 @@ datasource db {
   url      = "postgresql://subscriptionuser:0000@localhost:5432/userdb"
 }
 
-// User model for authentication
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -22,47 +18,41 @@ model User {
   @@map("users")
 }
 
-// Subscriber model for OneSignal users
 model Subscriber {
   id        String   @id @default(cuid())
   playerId  String   @unique
   mobile    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  groups Group[] @relation("SubscriberGroups")
+  groups    Group[]  @relation("SubscriberGroups")
 
   @@map("subscribers")
 }
 
-// Group model for organizing subscribers
 model Group {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  subscribers Subscriber[] @relation("SubscriberGroups")
+  id            String            @id @default(cuid())
+  name          String            @unique
+  description   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   notifications NotificationLog[] @relation("GroupNotifications")
+  subscribers   Subscriber[]      @relation("SubscriberGroups")
 
   @@map("groups")
 }
 
-// Notification log for tracking sent notifications
 model NotificationLog {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   message     String
   url         String?
   imageUrl    String?
-  status      String   @default("PENDING")
+  status      String    @default("PENDING")
   scheduledAt DateTime?
   sentAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  groups Group[] @relation("GroupNotifications")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  groups      Group[]   @relation("GroupNotifications")
 
   @@map("notification_logs")
 }

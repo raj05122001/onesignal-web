@@ -20,13 +20,9 @@ export default function SubscribersPage() {
     const checkAuth = async () => {
       try {
         const sessionData = await auth();
-        if (!sessionData?.user || sessionData.user.role !== "ADMIN") {
-          redirect("/login");
-        }
         setSession(sessionData);
       } catch (error) {
         console.error("Auth error:", error);
-        redirect("/login");
       } finally {
         setLoading(false);
       }
