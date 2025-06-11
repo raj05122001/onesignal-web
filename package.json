@@ -10,8 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:seed": "prisma db seed",
-    "db:test": "node -e \"require('./src/lib/db.js').testConnection()\"",
-    "sync-onesignal": "node scripts/sync-onesignal.js"
+    "db:test": "node -e \"require('./src/lib/db.js').testConnection()\""
   },
   "prisma": {
     "seed": "node prisma/seed.js"

@@ -29,6 +29,20 @@ model Subscriber {
   @@map("subscribers")
 }
 
+model Subscription {
+  id                  String    @id @default(cuid())
+  onesignal_player_id String    @unique
+  external_id         String?
+  service             String?
+  subscribed_at       DateTime?
+  last_active         DateTime?
+  is_active           Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("subscriptions")
+}
+
 model Group {
   id            String            @id @default(cuid())
   name          String            @unique
