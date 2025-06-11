@@ -10,7 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:seed": "prisma db seed",
-    "db:test": "node -e \"require('./src/lib/db.js').testConnection()\""
+    "db:test": "node -e \"require('./src/lib/db.js').testConnection()\"",
+    "sync-onesignal": "node scripts/sync-onesignal.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -26,6 +27,7 @@
     "@tanstack/react-query-next-experimental": "^5.80.6",
     "bcryptjs": "^3.0.2",
     "cmdk": "^1.1.1",
+    "dotenv": "^16.5.0",
     "lucide-react": "^0.513.0",
     "next": "15.3.3",
     "next-auth": "^4.24.11",

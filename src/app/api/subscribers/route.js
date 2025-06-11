@@ -1,91 +1,93 @@
-// app/api/subscribers/route.js
-//
-// GET  /api/subscribers
-//
-// Query-params
-// ───────────────────────────────────────────
-//   page       (number, optional – default 1)
-//   pageSize   (number, optional – default 100, max 1000)
-//   search     (string,  optional – filters mobile or playerId contains)
-//
-// Response
-// ───────────────────────────────────────────
-// {
-//   results:     [ { id, mobile, playerId, createdAt } ],
-//   total:       123,
-//   totalPages:  2,
-//   page:        1,
-//   pageSize:    100
-// }
-//
-// Guard
-// ───────────────────────────────────────────
-// • Only ADMINs may call this route. It reuses `requireRole(['ADMIN'])`
-//   from lib/auth.js.  Adjust as needed.
-//
-// --------------------------------------------------------------
+// src/app/api/subscribe/route.js
+// Enhanced subscription endpoint that saves to both OneSignal and local DB
 
 import { NextResponse } from "next/server";
-import prisma           from "@/lib/db";
-import { requireRole }  from "@/lib/auth";
+import prisma from "@/lib/db";
 
-export async function GET(request) {
+export async function POST(request) {
   try {
-    /* 1) RBAC – must be ADMIN */
-    await requireRole(["ADMIN"]);
+    const { playerId, mobile } = await request.json();
 
-    /* 2) Parse query-params */
-    const { searchParams } = new URL(request.url);
+    if (!playerId) {
+      return NextResponse.json(
+        { message: "Player ID is required" },
+        { status: 400 }
+      );
+    }
 
-    const page     = Math.max(1, parseInt(searchParams.get("page")      || "1",   10));
-    const pageSize = Math.max(1,
-                      Math.min(
-                        1000,
-                        parseInt(searchParams.get("pageSize") || "100", 10),
-                      ));
-    const search   = (searchParams.get("search") || "").trim();
+    console.log('📱 Processing subscription:', { playerId, mobile });
 
-    /* 3) Build Prisma filter */
-    const where = search
-      ? {
-          OR: [
-            { mobile:   { contains: search, mode: "insensitive" } },
-            { playerId: { contains: search, mode: "insensitive" } },
-          ],
-        }
-      : undefined;
+    // Check if subscriber already exists
+    let subscriber = await prisma.subscriber.findFirst({
+      where: { playerId: playerId }
+    });
 
-    /* 4) Query database */
-    const [ total, rows ] = await Promise.all([
-      prisma.subscriber.count({ where }),
-      prisma.subscriber.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        select: {
-          id:        true,
-          mobile:    true,
-          playerId:  true,
-          createdAt: true,
+    if (subscriber) {
+      // Update existing subscriber
+      subscriber = await prisma.subscriber.update({
+        where: { id: subscriber.id },
+        data: {
+          mobile: mobile || subscriber.mobile,
+          updatedAt: new Date(),
         },
-      }),
-    ]);
+        include: {
+          groups: true
+        }
+      });
+      
+      console.log('🔄 Updated existing subscriber:', subscriber.id);
+    } else {
+      // Find or create default group
+      let defaultGroup = await prisma.group.findFirst({
+        where: { name: 'All Subscribers' }
+      });
+
+      if (!defaultGroup) {
+        defaultGroup = await prisma.group.create({
+          data: {
+            name: 'All Subscribers',
+            description: 'Default group for all subscribers'
+          }
+        });
+      }
+
+      // Create new subscriber
+      subscriber = await prisma.subscriber.create({
+        data: {
+          playerId: playerId,
+          mobile: mobile,
+          groups: {
+            connect: { id: defaultGroup.id }
+          }
+        },
+        include: {
+          groups: true
+        }
+      });
+      
+      console.log('➕ Created new subscriber:', subscriber.id);
+    }
 
     return NextResponse.json({
-      results:     rows,
-      total,
-      totalPages:  Math.max(1, Math.ceil(total / pageSize)),
-      page,
-      pageSize,
+      success: true,
+      message: "Subscription processed successfully",
+      subscriber: {
+        id: subscriber.id,
+        playerId: subscriber.playerId,
+        mobile: subscriber.mobile,
+        groups: subscriber.groups.map(g => g.name)
+      }
     });
-  } catch (err) {
-    const msg = err?.message || "Internal server error";
-    const code =
-      msg === "Unauthorized"                        ? 401 :
-      msg.startsWith("Forbidden")                  ? 403 :
-                                                     500;
 
-    return NextResponse.json({ message: msg }, { status: code });
+  } catch (error) {
+    console.error('❌ Subscription processing failed:', error);
+    return NextResponse.json(
+      { 
+        success: false,
+        message: "Failed to process subscription",
+        error: error.message 
+      },
+      { status: 500 }
+    );
   }
 }

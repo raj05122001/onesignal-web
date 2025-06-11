@@ -35,17 +35,20 @@ async function apiFetch(path, { method = 'GET', body, qs } = {}) {
        Usage:
          const { data, isLoading, error } = useSubscribers({ page: 2, search: '9876' });
 ------------------------------------------------------------------- */
+// src/hooks/useSubscribers.js में
 export function useSubscribers({ page = 1, pageSize = 25, search = '' } = {}) {
   return useQuery({
     queryKey: ['subscribers', page, pageSize, search],
-    queryFn: () =>
-      apiFetch('/api/subscribers', {
+    queryFn: async () => {
+      console.log('🔄 Fetching subscribers...');
+      const result = await apiFetch('/api/subscribers', {
         qs: { page, pageSize, search },
-      }),
-    keepPreviousData: true,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+      });
+      console.log('📦 Subscribers data:', result);
+      return result;
+    },
     onError: (error) => {
-      console.error('Subscribers fetch error:', error);
+      console.error('❌ Subscribers fetch error:', error);
       toast.error('Failed to load subscribers');
     },
   });

@@ -24,6 +24,7 @@ import {
   Activity,
 } from "lucide-react";
 import React from "react";
+import OneSignalSyncTool from '@/components/OneSignalSyncTool';
 
 /* ─────────────────────────────────────────
    1. Aggregate DB look-ups
@@ -64,6 +65,13 @@ async function getStats() {
     }),
   ]);
 
+    console.log('📊 Dashboard Stats:', {
+    subscriberCount,
+    groupCount,
+    notificationsToday,
+    scheduledCount
+  });
+
   return {
     subscriberCount,
     groupCount,
@@ -92,6 +100,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <OneSignalSyncTool />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -245,7 +254,7 @@ function Kpi({ icon, label, value, trend, gradient, bgGradient }) {
     <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 shadow-lg border border-white/20 backdrop-blur-sm transition-transform duration-300 hover:scale-105 hover:shadow-xl`}>
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      
+
       <div className="relative">
         <div className="flex items-center justify-between">
           <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r ${gradient} text-white shadow-lg`}>
@@ -253,7 +262,7 @@ function Kpi({ icon, label, value, trend, gradient, bgGradient }) {
           </div>
           <TrendingUp className="h-5 w-5 text-emerald-500" />
         </div>
-        
+
         <div className="mt-4">
           <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{label}</p>
           <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{value.toLocaleString()}</p>
